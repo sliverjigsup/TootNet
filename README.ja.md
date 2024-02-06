@@ -1,5 +1,7 @@
 ﻿# TootNet
 
+これは__Sliverが個人的にAkkomaに対応させるためのフォークです
+
  [![NuGetBadge](https://img.shields.io/nuget/v/TootNet.svg)](https://www.nuget.org/packages/TootNet)
 
 TootNet は.NET Standard向けのマストドンライブラリです。
