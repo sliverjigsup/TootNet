@@ -33,9 +33,11 @@ namespace TootNet.Streaming
                 case MessageType.StatusUpdate:
                     UpdatedStatus = status;
                     break;
+                default: 
+                    throw new ArgumentException("Invalid message type received");
+
             }
 
-            throw new ArgumentException("Invalid message type received");
         }
 
         public StreamingMessage(MessageType msgType, Notification notification) : this(msgType)
@@ -80,9 +82,10 @@ namespace TootNet.Streaming
                 case MessageType.AnnouncementDelete:
                     DeletedAnnouncementId = id;
                     break;
-            }
+                default:
+                    throw new ArgumentException("Invalid message type received");
 
-            throw new ArgumentException("Invalid message type received");
+            }
         }
 
         public MessageType Type { get; set; }
