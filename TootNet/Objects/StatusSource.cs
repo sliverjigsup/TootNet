@@ -6,8 +6,7 @@ namespace TootNet.Objects
     public class StatusSource : BaseObject
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("text")]
         public string Text { get; set; }

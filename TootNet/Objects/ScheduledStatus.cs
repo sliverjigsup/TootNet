@@ -8,8 +8,7 @@ namespace TootNet.Objects
     public class ScheduledStatus : BaseObject
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("scheduled_at")]
         public DateTime ScheduledAt { get; set; }
@@ -43,15 +42,13 @@ namespace TootNet.Objects
         public string Visibility { get; set; }
 
         [JsonProperty("in_reply_to_id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long? InReplyToId { get; set; }
+        public string InReplyToId { get; set; }
 
         [JsonProperty("language")]
         public string Language { get; set; }
 
         [JsonProperty("application_id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long ApplicationId { get; set; }
+        public string ApplicationId { get; set; }
 
         [JsonProperty("scheduled_at")]
         public DateTime? ScheduledAt { get; set; }

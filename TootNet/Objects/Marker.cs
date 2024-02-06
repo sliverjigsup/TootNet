@@ -7,8 +7,7 @@ namespace TootNet.Objects
     public class Marker : BaseObject
     {
         [JsonProperty("last_read_id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long LastReadId { get; set; }
+        public string LastReadId { get; set; }
 
         [JsonProperty("version")]
         public int Version { get; set; }

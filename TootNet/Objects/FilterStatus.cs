@@ -7,11 +7,9 @@ namespace TootNet.Objects
     public class FilterStatus : BaseObject
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("status_id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long StatusId { get; set; }
+        public string StatusId { get; set; }
     }
 }

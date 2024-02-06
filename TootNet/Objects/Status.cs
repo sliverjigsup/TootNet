@@ -8,8 +8,7 @@ namespace TootNet.Objects
     public class Status : BaseObject
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("uri")]
         public string Uri { get; set; }
@@ -60,12 +59,10 @@ namespace TootNet.Objects
         public string Url { get; set; }
 
         [JsonProperty("in_reply_to_id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long? InReplyToId { get; set; }
+        public string InReplyToId { get; set; }
 
         [JsonProperty("in_reply_to_account_id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long? InReplyToAccountId { get; set; }
+        public string InReplyToAccountId { get; set; }
 
         [JsonProperty("reblog")]
         public Status Reblog { get; set; }
@@ -107,8 +104,7 @@ namespace TootNet.Objects
     public class StatusMention
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("username")]
         public string UserName { get; set; }

@@ -6,8 +6,7 @@ namespace TootNet.Objects
     public class MediaAttachment : BaseObject
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         /// <summary>
         /// One of: "image", "gifv", "video", "audio", "unknown"

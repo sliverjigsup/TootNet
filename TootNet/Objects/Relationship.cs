@@ -8,8 +8,7 @@ namespace TootNet.Objects
     public class Relationship : BaseObject
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("following")]
         public bool Following { get; set; }

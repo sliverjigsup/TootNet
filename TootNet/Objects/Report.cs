@@ -8,8 +8,7 @@ namespace TootNet.Objects
     public class Report : BaseObject
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("action_taken")]
         public bool ActionTaken { get; set; }

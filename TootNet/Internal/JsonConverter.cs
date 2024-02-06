@@ -5,39 +5,39 @@ using Newtonsoft.Json.Linq;
 
 namespace TootNet.Internal
 {
-    public class IdConverter : JsonConverter
-    {
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType == typeof(long);
-        }
+    //public class IdConverter : JsonConverter
+    //{
+    //    public override bool CanConvert(Type objectType)
+    //    {
+    //        return objectType == typeof(long);
+    //    }
 
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-        {
-            switch (reader.TokenType)
-            {
-                case JsonToken.String:
-                    if (reader.Value == null)
-                        throw new JsonSerializationException("This object is not convertible");
+    //    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    //    {
+    //        switch (reader.TokenType)
+    //        {
+    //            case JsonToken.String:
+    //                if (reader.Value == null)
+    //                    throw new JsonSerializationException("This object is not convertible");
 
-                    return long.Parse(reader.Value.ToString());
-                case JsonToken.Integer:
-                    if (reader.Value == null)
-                        throw new JsonSerializationException("This object is not convertible");
+    //                return reader.Value.ToString();
+    //            case JsonToken.Integer:
+    //                if (reader.Value == null)
+    //                    throw new JsonSerializationException("This object is not convertible");
 
-                    return (long)reader.Value;
-                case JsonToken.Null:
-                    return null;
-                default:
-                    throw new JsonSerializationException("This object is not convertible");
-            }
-        }
+    //                return (long)reader.Value;
+    //            case JsonToken.Null:
+    //                return null;
+    //            default:
+    //                throw new JsonSerializationException("This object is not convertible");
+    //        }
+    //    }
 
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-        {
-            throw new NotImplementedException();
-        }
-    }
+    //    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
 
     public class IdArrayConverter : JsonConverter
     {

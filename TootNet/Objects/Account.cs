@@ -8,8 +8,7 @@ namespace TootNet.Objects
     public class Account : BaseObject
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("username")]
         public string UserName { get; set; }

@@ -8,8 +8,7 @@ namespace TootNet.Objects
     public class Poll : BaseObject
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
 
         [JsonProperty("expires_at")]
         public DateTime? ExpiresAt { get; set; }

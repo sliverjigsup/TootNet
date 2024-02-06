@@ -9,8 +9,7 @@ namespace TootNet.Objects
     public class Filter : BaseObject
     {
         [JsonProperty("id")]
-        [JsonConverter(typeof(IdConverter))]
-        public long Id { get; set; }
+        public string Id { get; set; }
         
         [JsonProperty("title")]
         public string Title { get; set; }
