@@ -23,5 +23,9 @@ namespace TootNet.Objects
 
         [JsonProperty("report")]
         public Report Report { get; set; }
+
+        [JsonProperty("emoji")]
+        public string Emoji { get; set; }
+
     }
 }
