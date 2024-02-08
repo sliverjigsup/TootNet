@@ -99,6 +99,12 @@ namespace TootNet.Objects
 
         [JsonProperty("filtered")]
         public IEnumerable<FilterResult> Filtered { get; set; }
+
+
+        [JsonProperty("emoji_reactions")]
+        public IEnumerable<EmojiReaction> EmojiReactions { get; set; }
+
+
     }
 
     public class StatusMention
