@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq.Expressions;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -230,48 +231,54 @@ namespace TootNet.Streaming
         {
             var conn = new StreamingConnection();
 
-            var url = "https://" + _tokens.Instance + "/api/v1/streaming";
+            var url = "wss://" + _tokens.Instance + "/api/v1/streaming";
             switch (_type)
             {
                 case StreamingType.User:
-                    url += "/user";
+                    url += "/?stream=user";
                     break;
                 case StreamingType.UserNotification:
-                    url += "/user/notification";
+                    url += "/?stream=user:notification";
                     break;
                 case StreamingType.Public:
-                    url += "/public";
+                    url += "/?stream=public";
                     break;
                 case StreamingType.PublicLocal:
-                    url += "/public/local";
+                    url += "/?stream=public:local";
                     break;
                 case StreamingType.PublicRemote:
-                    url += "/public/remote";
+                    url += "/?stream=public:remote";
                     break;
-                case StreamingType.Hashtag:
-                    if (!_parameters.ContainsKey("tag") || string.IsNullOrEmpty(_parameters["tag"].ToString()))
-                        throw new ArgumentException("You must specify a tag");
 
-                    url += "/hashtag";
-                    break;
-                case StreamingType.HashtagLocal:
-                    if (!_parameters.ContainsKey("tag") || string.IsNullOrEmpty(_parameters["tag"].ToString()))
-                        throw new ArgumentException("You must specify a tag");
+                //以下は一旦保留
+                
+                //case StreamingType.Hashtag:
+                //    if (!_parameters.ContainsKey("tag") || string.IsNullOrEmpty(_parameters["tag"].ToString()))
+                //        throw new ArgumentException("You must specify a tag");
 
-                    url += "/hashtag/local";
-                    break;
-                case StreamingType.List:
-                    if (!_parameters.ContainsKey("list") || string.IsNullOrEmpty(_parameters["list"].ToString()))
-                        throw new ArgumentException("You must specify a list");
+                //    url += "/hashtag";
+                //    break;
+                //case StreamingType.HashtagLocal:
+                //    if (!_parameters.ContainsKey("tag") || string.IsNullOrEmpty(_parameters["tag"].ToString()))
+                //        throw new ArgumentException("You must specify a tag");
 
-                    url += "/list";
-                    break;
+                //    url += "/hashtag/local";
+                //    break;
+                //case StreamingType.List:
+                //    if (!_parameters.ContainsKey("list") || string.IsNullOrEmpty(_parameters["list"].ToString()))
+                //        throw new ArgumentException("You must specify a list");
+
+                //    url += "/list";
+                //    break;
+
                 case StreamingType.Direct:
-                    url += "/direct";
+                    url += "?stream=direct";
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            url += "&access_token=" + _tokens.AccessToken;
+
 
             url = Utils.CreateUrlParameter(url, _parameters);
 
@@ -289,73 +296,33 @@ namespace TootNet.Streaming
             var token = _cancel.Token;
             try
             {
-                using (var client = tokens.ConnectionOptions.GetHttpClient(tokens.AccessToken, false))
-                using (token.Register(client.Dispose))
+                using (var client = new ClientWebSocket())
                 {
-                    using (var stream = await client.GetStreamAsync(url))
-                    using (token.Register(stream.Dispose))
-                    using (var reader = new StreamReader(stream, Encoding.UTF8, true, 16384))
-                    using (token.Register(reader.Dispose))
-                    {
-                        string eventName = null;
-                        while (!reader.EndOfStream)
-                        {
-                            var line = await reader.ReadLineAsync();
-                            if (string.IsNullOrEmpty(line) || line.StartsWith(":"))
-                            {
-                                eventName = null;
-                                continue;
-                            }
+                    await client.ConnectAsync(new Uri(url), token);
 
-                            if (line.StartsWith("event: "))
+                    using (token.Register(() => client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Connection closed", CancellationToken.None)))
+                    {
+                        var buffer = new byte[16384];
+                        var segment = new ArraySegment<byte>(buffer);
+
+                        while (client.State == WebSocketState.Open && !token.IsCancellationRequested)
+                        {
+                            var result = await client.ReceiveAsync(segment, token);
+
+                            if (result.MessageType == WebSocketMessageType.Text)
                             {
-                                eventName = line.Substring("event: ".Length).Trim();
+                                var data = Encoding.UTF8.GetString(buffer, 0, result.Count);
+
+                                // データを処理するロジックを追加
+                              ProcessWebSocketData(data, observer);
                             }
-                            if (line.StartsWith("data: "))
+                            else if (result.MessageType == WebSocketMessageType.Close)
                             {
-                                var data = line.Substring("data: ".Length);
-                                switch (eventName)
-                                {
-                                    case "update":
-                                        var status = JsonConvert.DeserializeObject<Status>(data);
-                                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.Status, status));
-                                        break;
-                                    case "delete":
-                                        var deletedStatusId = long.Parse(data);
-                                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.StatusDelete, deletedStatusId));
-                                        break;
-                                    case "notification":
-                                        var notification = JsonConvert.DeserializeObject<Notification>(data);
-                                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.Notification, notification));
-                                        break;
-                                    case "filters_changed":
-                                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.FiltersChanged));
-                                        break;
-                                    case "conversation":
-                                        var conversation = JsonConvert.DeserializeObject<Conversation>(data);
-                                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.Conversation, conversation));
-                                        break;
-                                    case "announcement":
-                                        var announcement = JsonConvert.DeserializeObject<Announcement>(data);
-                                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.Announcement, announcement));
-                                        break;
-                                    case "announcement.reaction":
-                                        var announcementReaction = JsonConvert.DeserializeObject<Reaction>(data);
-                                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.AnnouncementReaction, announcementReaction));
-                                        break;
-                                    case "announcement.delete":
-                                        var deletedAnnouncementId = long.Parse(data);
-                                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.AnnouncementDelete, deletedAnnouncementId));
-                                        break;
-                                    case "status.update":
-                                        var updatedStatus = JsonConvert.DeserializeObject<Status>(data);
-                                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.StatusUpdate, updatedStatus));
-                                        break;
-                                    case "encrypted_message":
-                                        break;
-                                }
+                                // クローズ メッセージが送信された場合などのクローズ処理を追加
+                                await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Received close message", CancellationToken.None);
                             }
                         }
+
                         observer.OnCompleted();
                     }
                 }
@@ -365,6 +332,60 @@ namespace TootNet.Streaming
                 if (!token.IsCancellationRequested)
                 {
                     observer.OnError(e);
+                }
+            }
+        }
+
+        private void ProcessWebSocketData(string line, IObserver<StreamingMessage> observer)
+        {
+            var rootData = (Newtonsoft.Json.Linq.JObject)Newtonsoft.Json.JsonConvert.DeserializeObject(line);
+            var payload = rootData["payload"].ToString();
+
+            string eventName = rootData["event"].ToString();
+
+
+            if (rootData["payload"] != null)
+            {
+                var data = rootData["payload"].ToString();
+                switch (eventName)
+                {
+                    case "update":
+                        var status = JsonConvert.DeserializeObject<Status>(data);
+                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.Status, status));
+                        break;
+                    case "delete":
+                        var deletedStatusId = long.Parse(data);
+                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.StatusDelete, deletedStatusId));
+                        break;
+                    case "notification":
+                        var notification = JsonConvert.DeserializeObject<Notification>(data);
+                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.Notification, notification));
+                        break;
+                    case "filters_changed":
+                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.FiltersChanged));
+                        break;
+                    case "conversation":
+                        var conversation = JsonConvert.DeserializeObject<Conversation>(data);
+                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.Conversation, conversation));
+                        break;
+                    case "announcement":
+                        var announcement = JsonConvert.DeserializeObject<Announcement>(data);
+                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.Announcement, announcement));
+                        break;
+                    case "announcement.reaction":
+                        var announcementReaction = JsonConvert.DeserializeObject<Reaction>(data);
+                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.AnnouncementReaction, announcementReaction));
+                        break;
+                    case "announcement.delete":
+                        var deletedAnnouncementId = long.Parse(data);
+                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.AnnouncementDelete, deletedAnnouncementId));
+                        break;
+                    case "status.update":
+                        var updatedStatus = JsonConvert.DeserializeObject<Status>(data);
+                        observer.OnNext(new StreamingMessage(StreamingMessage.MessageType.StatusUpdate, updatedStatus));
+                        break;
+                    case "encrypted_message":
+                        break;
                 }
             }
         }
